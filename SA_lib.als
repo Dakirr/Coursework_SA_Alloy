@@ -1,18 +1,5 @@
-//
-// Initialisation
-//
-
-enum Number {N0, N1, N2}
-
-enum ConstantQualityType {CoT1}
-enum ChangingQualityType {House, ChT1}
-
-let final_time = 6
-
-fun distance [n1: Number, n2: Number] : one Int {
-	{1}
-}
-
+module SA_lib
+open SA_init
 //
 // Time
 //
@@ -166,7 +153,6 @@ fact {
 	all ee: ExchangeEvent | one me: MeetingEvent | ee.timestamp = me.timestamp and ee.p1 in me.people and ee.p2 in me.people // Exchange только при условии Meeting
 	all p: Person | some ee: ExchangeEvent | (ee.p1 = p) implies (one ee_rev: ExchangeEvent | ee_rev.p2 = p and ee.timestamp = ee_rev.timestamp and ee.type = ee_rev.type) // Если есть передача от человека, есть единственная передача ему
 	all p: Person | all t: Time | all type1: ChangingQualityType | lone ee: ExchangeEvent | (ee.p1 = p and ee.timestamp = t and ee.type = type1) // Есть не более одной передачи от каждого человека
-
 }
 
 fact { // Если не произошел ExchangeEvent, качества сохраняются
@@ -197,14 +183,3 @@ fact { // Если произошел ExchangeEvent, качество меняе
       		}
     	}
 }
-
-//
-// General
-//
-
-fact {
-	HasQuality[N0, House, N1, T[3]]
-	HasQuality[N1, House, N2, T[3]]
-}
-
-run {} for 100 Quality, 3 Person, 3 MeetingEvent, 5 TravellingEvent, 4 ExchangeEvent, 6 Time
