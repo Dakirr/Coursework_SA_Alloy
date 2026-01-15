@@ -1,0 +1,25 @@
+services:
+  python-generator:
+    build: ./python
+    volumes:
+      - ./python:/app
+      - ./output:/output
+      - ./alloy/model:/final_dest 
+    command: >
+      sh -c "
+        python /app/script.py &&
+        cp -r /output/* /final_dest/ &&
+        ls /final_dest/
+      "
+
+  alloy-analyzer:
+    build: ./alloy
+    container_name: alloy-java
+    volumes:
+      - ./alloy:/app
+      - shared_data:/data
+    depends_on:
+      - python-generator
+
+volumes:
+  shared_data:
