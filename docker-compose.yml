@@ -3,21 +3,29 @@ services:
     build: ./python
     volumes:
       - ./python:/app
-      - ./output:/output
+      - ./generated:/generated
       - ./alloy/model:/final_dest 
     command: >
       sh -c "
-        python /app/script.py &&
-        cp -r /output/* /final_dest/ &&
-        ls /final_dest/
+        python /app/src/Main.py &&
+        cp -r /generated/* /final_dest/      
       "
 
   alloy-analyzer:
     build: ./alloy
     container_name: alloy-java
+    working_dir: /app  
     volumes:
       - ./alloy:/app
       - shared_data:/data
+      - ./result:/data/result
+    command: >
+      sh -c "
+        java -jar /app/lib/org.alloytools.alloy.dist.jar exec -f /app/model/SA_hypothesis.als &&
+        mkdir -p /data/result &&
+        cp -r /app/SA_hypothesis/* /data/result/ &&
+        rm -rf /app/SA_hypothesis
+      "
     depends_on:
       - python-generator
 
