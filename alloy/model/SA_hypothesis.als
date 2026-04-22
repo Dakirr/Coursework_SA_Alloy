@@ -8,7 +8,6 @@ fact {
 	HasQuality[N1, House, N2, T[2]]
 	HaveMetInHouse[N0, N1, T[2], N1]
 	IsTravellingFromTo[N0, T[1], N0, N1]
-	MustReturnHomeAfterTravel
 }
 
-run {} for 36 Quality, 3 Person, 12 MeetingEvent, 12 TravellingEvent, 36 ExchangeEvent, 4 Time
+run {} for 9030 Quality, 6 Person, 1806 MeetingEvent, 1806 TravellingEvent, 9030 ExchangeEvent, 301 Time

@@ -9,7 +9,8 @@ class AlloyBuilder:
         constant_quality_types: set[str], 
         changing_quality_types: set[str], 
         final_time: int, 
-        distances: list[list[int]] = None
+        distances: list[list[int]] = None,
+        path: str = "/generated"
     ): 
         assert players_num > 0, "players number should be at least 1"
 
@@ -24,7 +25,7 @@ class AlloyBuilder:
         self.final_time = final_time
         self.distances = distances
         self.clauses = ""
-        self.dir = "/generated"
+        self.dir = path
         self.must_return_home_after_travel = True
     
     def set_must_return_home_after_travel(self, value: bool) -> None:

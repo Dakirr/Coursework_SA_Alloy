@@ -7,6 +7,7 @@ services:
       - ./alloy/model:/final_dest 
     command: >
       sh -c "
+        pip install PyYAML &&
         python /app/src/Main.py &&
         cp -r /generated/* /final_dest/      
       "
@@ -27,7 +28,8 @@ services:
         rm -rf /app/SA_hypothesis
       "
     depends_on:
-      - python-generator
+      python-generator:
+        condition: service_completed_successfully
 
 volumes:
   shared_data:
