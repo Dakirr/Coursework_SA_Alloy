@@ -25,6 +25,14 @@ pred HaveMetInHouse [p1: Number, p2: Number, t1: Time, h1: Number] {
 	some me: MeetingEvent | P[p1] in me.people and P[p2] in me.people and me.timestamp = t1 and me.house = h1
 }
 
+pred GroupHaveMet [group: some Number, t1: Time] {
+	some me: MeetingEvent | (all n: Number | P[n] in group implies P[n] in me.people) and me.timestamp = t1
+}
+
+pred GroupHaveMetInHouse [group: some Number, t1: Time, h1: Number] {
+	some me: MeetingEvent | (all n: Number | P[n] in group implies P[n] in me.people) and me.timestamp = t1 and me.house = h1
+}
+
 pred ExchangedWithQuality [id1: Number, id2: Number, q: ChangingQualityType, t: Time] {
 	some disj ee1, ee2: ExchangeEvent | 
 		ee1.p1.id = id1 and ee1.p2.id = id2 and 

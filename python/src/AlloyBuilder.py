@@ -120,6 +120,22 @@ class AlloyBuilder:
             self.add_clause(f"HaveMetInHouse[N{person1_num}, N{person2_num}, T[{time}], N{house_num}]")
         else:
             self.add_clause(f"HaveMet[N{person1_num}, N{person2_num}, T[{time}]]")
+
+    def add_have_met_group_clause(
+        self,
+        people: set[int],
+        time: int,
+        house_num: int = None
+    ) -> None:
+        for p in people:
+            self._assert_in_bounds(p)
+        self._assert_correct_time(time)
+        if house_num is not None:
+            self._assert_in_bounds(house_num, "House Number")
+            self.add_clause(f"GroupHaveMetInHouse[{' + '.join(['N'+str(i) for i in people])}, T[{time}], N{house_num}]")
+        else:
+            self.add_clause(f"GroupHaveMet[{' + '.join(['N'+str(i) for i in people])}, T[{time}]]")
+
     
     def add_have_exchanged_clause(
         self,

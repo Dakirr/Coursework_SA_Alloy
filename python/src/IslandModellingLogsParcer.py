@@ -1,4 +1,5 @@
 import yaml
+import ast
 from AlloyBuilder import AlloyBuilder
 
 class LogsParcer:
@@ -34,8 +35,9 @@ class LogsParcer:
                 for i in data['distance_matrix'].replace("[", "").replace("]","").split("\n")]
 
         self.must_return_home_after_travel = data["mandatory_return"]
+        self.alloy_builder = self._create_alloy_builder()
 
-    def get_alloy_builder(self) -> AlloyBuilder:
+    def _create_alloy_builder(self) -> AlloyBuilder:
         ab = AlloyBuilder(
             self.players_num, 
             self.constant_quality_types, 
@@ -45,4 +47,52 @@ class LogsParcer:
         )
         ab.set_must_return_home_after_travel(self.must_return_home_after_travel)
         return ab
+
+        
+
+    def get_alloy_builder(self) -> AlloyBuilder:
+        return self.alloy_builder
+    
+    def _parse_action_log(self, line: str) -> dict[str, object]:
+        line = line.strip("ActionFact(timestamp=")
+        timestamp, line = line.split(", ", 1)
+        timestamp = int(timestamp)
+        line = line.strip("type=<ActionType.")
+        event_type, line = line.split(": ", 1)
+        line = line.split(">, actors=", 1)[1]
+        actors, line = line.split(", metadata=", 1)
+        actors = [int(i)-1 for i in actors.strip("(").strip(")").split(", ")]
+        metadata = ast.literal_eval(line[:-2])
+        return {"timestamp": timestamp, "event_type": event_type, "actors": actors, "data": metadata}
+
+
+    def _parse_exchange_log(self, line: str) -> None:
+        log = line.strip("[").strip("]")
+        # TODO
+
+    def add_facts_from_file_as_clauses(self, path: str, is_relative: bool = True) -> None:
+        full_path : str
+        if is_relative:
+            full_path = f"{self.base_path}/{path}"
+        else:
+            full_path = path
+        
+        with open(full_path, "r") as f:
+            for line in f:
+                if line[0] == "[":
+                    self._parse_exchange_log(line)
+                else: 
+                    log = self._parse_action_log(line)
+                    if log['timestamp'] >= self.final_time:
+                        break
+                    if log["event_type"] == "START_TRIP":
+                        clause =  f"one te : TravellingEvent | " 
+                        clause += f"te.start = T[{log['data']['start']}] "
+                        clause += f"and te.arrival = T[{log['data']['end']}] "
+                        clause += f"and te.from = N{log['data']['from'] - 1} "
+                        clause += f"and te.to = N{log['data']['to'] - 1} "
+                        clause += f"and te.person = P[N{log['actors'][0]}]"
+                        self.alloy_builder.add_clause(clause)
+                    elif log["event_type"] == "MEETING":
+                        self.alloy_builder.add_have_met_group_clause(log['actors'], log['timestamp'], log["data"]["house_at"] - 1)     
    
