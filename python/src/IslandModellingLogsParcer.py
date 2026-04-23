@@ -48,8 +48,6 @@ class LogsParcer:
         ab.set_must_return_home_after_travel(self.must_return_home_after_travel)
         return ab
 
-        
-
     def get_alloy_builder(self) -> AlloyBuilder:
         return self.alloy_builder
     
@@ -66,13 +64,65 @@ class LogsParcer:
         
         return {"timestamp": timestamp, "event_type": event_type, "actors": actors, "data": metadata}
 
+    def _parse_exchange_params(self, line: str) -> dict[str, object]:
+        timestamp, line = line.split(", ", 1)
+        timestamp = int(timestamp)
+        line = line.strip("type=<Action.Type.")
+        event_type, line = line.split(": ", 1)
+        line = line.split(">, actors=", 1)[1]
+        actors, line = line.split(", metadata=", 1)
+        actors = [int(i)-1 for i in actors.strip("(").strip(")").split(", ")]
+        metadata = dict()
+        line = line.strip("{'from': ")
+        from_val, line = line.split(", ", 1)
+        from_val = int(from_val)
+        line = line.strip("'to': ")
+        to_val, line = line.split(", ", 1)
+        to_val = int(to_val)
+        line = line.strip("'item: '")
+        if (event_type == "PET_SWAP"):
+            pet = line.split(" ", 1)[1].split("]")[0].strip(")")[1:-3]
+            return {"timestamp": timestamp, "event_type": "QUALITY_EXCHANGE", "actors": actors, "data": {"quality": "pet", "value": pet}}
+        elif (event_type == "HOUSE_SWAP"):
+            house_id, line = line.strip("House(id=").split(", ", 1)
+            return {"timestamp": timestamp, "event_type": "HOUSE_EXCHANGE", "actors": actors, "data": {"value": int(house_id)}}
+        else:
+            raise AssertionError("event_type should be in {PET_SWAP, HOUSE_SWAP}")
 
     def _parse_exchange_log(self, line: str) -> None:
         log = line.strip("[").strip("]")
         actions = log.split(", Action")
-        actions = [actions[i] if i == 0 else "Action" + actions[i] for i in range(len(actions))]
-        # TODO: parse exchange log and add clauses to alloy builder
-
+        actions = [self._parse_exchange_params(action.strip("Action").strip("Fact").strip("(timestamp=").strip(")")) for action in actions]
+        for action in actions:
+            if action['event_type'] == 'QUALITY_EXCHANGE':
+                self.alloy_builder.add_have_exchanged_clause(
+                    action['actors'][0],
+                    action['actors'][1],
+                    action['timestamp'],
+                    action['data']['quality'] 
+                )
+                self.alloy_builder.add_has_quality_clause(
+                    action['actors'][0],
+                    action['data']['quality'],
+                    self._quality_mappings['pet'][action['data']['value']],
+                    action['timestamp']
+                )
+            elif action['event_type'] == 'HOUSE_EXCHANGE':
+                self.alloy_builder.add_have_exchanged_clause(
+                    action['actors'][0],
+                    action['actors'][1],
+                    action['timestamp'],
+                    "House" 
+                )
+                self.alloy_builder.add_has_quality_clause(
+                    action['actors'][0],
+                    "House",
+                    action['data']['value'] - 1,
+                    action['timestamp']
+                )
+            else:
+                raise AssertionError("event_type should be in {PET_SWAP, HOUSE_SWAP}")
+            
     def add_facts_from_file_as_clauses(self, path: str, is_relative: bool = True) -> None:
         full_path : str
         if is_relative:
@@ -98,4 +148,4 @@ class LogsParcer:
                         self.alloy_builder.add_clause(clause)
                     elif log["event_type"] == "MEETING":
                         self.alloy_builder.add_have_met_group_clause(log['actors'], log['timestamp'], log["data"]["house_at"] - 1)     
-   
+                    
