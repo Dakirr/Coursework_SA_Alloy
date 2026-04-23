@@ -31,7 +31,7 @@ class LogsParcer:
                     self._quality_mappings["House"].update({value: id})
         
         self.distances = [
-            [float(j) for j in i.replace("]", " ").replace("nan", f"{self.final_time}").split(", ")]
+            [round(float(j)) for j in i.replace("]", " ").replace("nan", f"{self.final_time}").split(", ")]
                 for i in data['distance_matrix'].replace("[", "").replace("]","").split("\n")]
 
         self.must_return_home_after_travel = data["mandatory_return"]
@@ -62,13 +62,16 @@ class LogsParcer:
         line = line.split(">, actors=", 1)[1]
         actors, line = line.split(", metadata=", 1)
         actors = [int(i)-1 for i in actors.strip("(").strip(")").split(", ")]
-        metadata = ast.literal_eval(line[:-2])
+        metadata = ast.literal_eval(line[:-2].replace("<", "\"").replace(">", "\""))
+        
         return {"timestamp": timestamp, "event_type": event_type, "actors": actors, "data": metadata}
 
 
     def _parse_exchange_log(self, line: str) -> None:
         log = line.strip("[").strip("]")
-        # TODO
+        actions = log.split(", Action")
+        actions = [actions[i] if i == 0 else "Action" + actions[i] for i in range(len(actions))]
+        # TODO: parse exchange log and add clauses to alloy builder
 
     def add_facts_from_file_as_clauses(self, path: str, is_relative: bool = True) -> None:
         full_path : str

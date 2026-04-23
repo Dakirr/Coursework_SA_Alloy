@@ -26,11 +26,11 @@ pred HaveMetInHouse [p1: Number, p2: Number, t1: Time, h1: Number] {
 }
 
 pred GroupHaveMet [group: some Number, t1: Time] {
-	some me: MeetingEvent | (all n: Number | P[n] in group implies P[n] in me.people) and me.timestamp = t1
+	some me: MeetingEvent | (all n: Number | n in group implies P[n] in me.people) and me.timestamp = t1
 }
 
 pred GroupHaveMetInHouse [group: some Number, t1: Time, h1: Number] {
-	some me: MeetingEvent | (all n: Number | P[n] in group implies P[n] in me.people) and me.timestamp = t1 and me.house = h1
+	some me: MeetingEvent | (all n: Number | n in group implies P[n] in me.people) and me.timestamp = t1 and me.house = h1
 }
 
 pred ExchangedWithQuality [id1: Number, id2: Number, q: ChangingQualityType, t: Time] {

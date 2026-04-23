@@ -52,6 +52,27 @@ class AlloyBuilder:
         assert quality_type in self.changing_quality_types, \
             f"quality type should not be constant"
 
+    def generate_distances(self) -> str:
+        if self.distances is None:
+            return "fun distance [n1: Number, n2: Number] : one Int {\n\t{1}\n}\n"
+        else:
+            assert len(self.distances) == self.players_num, \
+                f"matrix of distances must be {self.players_num} by {self.players_num}"
+            for row in self.distances:
+                assert len(row) == self.players_num, \
+                    f"matrix of distances must be {self.players_num} by {self.players_num}"
+                
+            res = "fun distance_arr: Number -> Number -> one Int {\n"
+            for i in range(self.players_num):
+                for j in range(self.players_num):
+                    res += f"\tN{i} -> N{j} -> {self.distances[i][j]}"
+                    if i != self.players_num - 1 or j != self.players_num - 1:
+                        res += " +\n"
+                    else:
+                        res += "\n"
+            res += "}\nfun distance [n1: Number, n2: Number] : one Int {\n\tdistance_arr[n1][n2]\n}\n\n"
+            return res
+        
     def generate_init_file(self) -> str:
         res = ""
         res =  "module SA_init\n"
@@ -59,10 +80,9 @@ class AlloyBuilder:
         res += "enum ConstantQualityType {" + ", ".join(self.constant_quality_types) + "}\n"
         res += "enum ChangingQualityType {" + ", ".join(self.changing_quality_types) + "}\n"
         res += f"let final_time = {self.final_time}\n"
-        res += f"let final_time_m_1 = sub[final_time, 1]\n"
+        res += f"let final_time_m_1 = sub[final_time, 1]\n\n"
 
-        # Пока захардкожены расстояния
-        res += "fun distance [n1: Number, n2: Number] : one Int {\n\t{1}\n}\n"
+        res += self.generate_distances()
         return res 
 
     def add_clause(self, clause: str) -> None:
@@ -167,7 +187,8 @@ class AlloyBuilder:
         quality_count = len(self.constant_quality_types) + len(self.changing_quality_types)
         res += "run {} " + \
         f"for {self.final_time*self.players_num*quality_count} Quality, " + \
-        f"{self.players_num} Person, {self.final_time*self.players_num} MeetingEvent, " + \
+        f"{self.players_num} Person, " + \
+        f"{self.final_time*self.players_num} MeetingEvent, " + \
         f"{self.final_time*self.players_num} TravellingEvent, " + \
         f"{self.final_time*self.players_num*quality_count} ExchangeEvent, " + \
         f"{self.final_time} Time"
