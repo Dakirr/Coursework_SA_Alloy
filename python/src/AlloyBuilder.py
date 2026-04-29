@@ -163,14 +163,14 @@ class AlloyBuilder:
         person2_num: int,
         time: int, 
         quality_type: str
-    ):
+    ) -> None:
         self._assert_in_bounds(person1_num, "Person 1 Number")
         self._assert_in_bounds(person2_num, "Person 2 Number")
         self._assert_correct_time(time)
         self._assert_quality_type_not_constant(quality_type)
         self.add_clause(f"ExchangedWithQuality[N{person1_num}, N{person2_num}, {quality_type}, T[{time}]]") 
 
-    def generate_hypothesis_file(self):
+    def generate_hypothesis_file(self) -> str:
         res = ""
         res =  "module SA_hypothesis\n"
         res += "open SA_init\n"
@@ -194,7 +194,7 @@ class AlloyBuilder:
         f"{self.final_time} Time"
         return res 
 
-    def build(self):
+    def build(self) -> None:
         shutil.rmtree(self.dir, ignore_errors = True) 
         os.makedirs(self.dir, exist_ok=True)
 
