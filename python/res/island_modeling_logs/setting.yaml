@@ -1,6 +1,6 @@
 experiment_name: all_random_gen
 experiment_id: '20260112_174804'
-num_days: 100
+num_days: 10
 tracked_metrics:
 - total_awareness
 - agent1_awareness

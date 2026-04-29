@@ -60,7 +60,7 @@ class LogsParcer:
         line = line.split(">, actors=", 1)[1]
         actors, line = line.split(", metadata=", 1)
         actors = [int(i)-1 for i in actors.strip("(").strip(")").split(", ")]
-        metadata = ast.literal_eval(line[:-2].replace("<", "\"").replace(">", "\""))
+        metadata = ast.literal_eval(line.replace("<", "\"").replace(">", "\"").replace(")", ""))
         
         return {"timestamp": timestamp, "event_type": event_type, "actors": actors, "data": metadata}
 
